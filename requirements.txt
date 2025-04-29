@@ -1,0 +1,13 @@
+aiofiles==24.1.0
+aiosqlite==0.21.0
+asyncio==3.4.3
+asyncua==1.1.6
+cffi==1.17.1
+cryptography==44.0.2
+pycparser==2.22
+pyOpenSSL==25.0.0
+python-dateutil==2.9.0.post0
+pytz==2025.2
+six==1.17.0
+sortedcontainers==2.4.0
+typing_extensions==4.13.2
