@@ -1,18 +1,60 @@
-# opcua/client.py
-
+import asyncio
 from asyncua import Client
 
 
 class PLCClient:
     def __init__(self, url):
         self.url = url
-        self.client = Client(url)
+        self.client = Client(url=url)
+        self.connected = False
 
     async def connect(self):
-        await self.client.connect()
+        try:
+            await self.client.connect()
+            self.connected = True
+            print("Connected to PLC")
+        except Exception as e:
+            print(f"Error connecting to PLC: {e}")
+            self.connected = False
 
     async def disconnect(self):
-        await self.client.disconnect()
+        if self.connected:
+            await self.client.disconnect()
+            self.connected = False
+            print("Disconnected from PLC")
 
-    def get_client(self):
-        return self.client
+    async def read_node(self, node_id):
+        if self.connected:
+            try:
+                node = self.client.get_node(node_id)
+                value = await node.read_value()
+                return value
+            except Exception as e:
+                print(f"Error reading node {node_id}: {e}")
+                return None
+        else:
+            print("Not connected to PLC")
+            return None
+
+    async def write_node(self, node_id, value):
+        if self.connected:
+            try:
+                node = self.client.get_node(node_id)
+                await node.write_value(value)
+            except Exception as e:
+                print(f"Error writing to node {node_id}: {e}")
+        else:
+            print("Not connected to PLC")
+
+    async def browse(self, node_id):
+        if self.connected:
+            try:
+                node = self.client.get_node(node_id)
+                children = await node.get_children()
+                return children
+            except Exception as e:
+                print(f"Error browsing node {node_id}: {e}")
+                return None
+        else:
+            print("Not connected to PLC")
+            return None
