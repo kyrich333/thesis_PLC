@@ -65,14 +65,14 @@ class PLCApp:
 
         self.create_tabs()
 
-    def send_to_client(self, node_id):
-        node_address = self.node_addresses.get(node_id)
+    def send_to_client(self, key):
+        node_address = self.node_addresses.get(key)
         if node_address:
             asyncio.run_coroutine_threadsafe(
                 self.plc.toggle_output(node_address), self.loop)
             print(f"Sent command to PLC: {node_address}")
         else:
-            print(f"Node ID {node_id} not found in node addresses.")
+            print(f"Node ID {key} not found in node addresses.")
 
     def create_tabs(self):
         # Home Tab
@@ -233,23 +233,23 @@ class PLCApp:
         button_Q00 = Button(frame_Q00, padx=40, pady=20,
                             command=lambda: [self.send_to_client("Q00"), print("button O00 is clicked")])
         button_Q01 = Button(frame_Q01, padx=40, pady=20,
-                            command=lambda: [self.send_to_client("ns=4;i=5"), print("button O01 is clicked")])
+                            command=lambda: [self.send_to_client("Q01"), print("button O01 is clicked")])
         button_Q02 = Button(frame_Q02, padx=40, pady=20,
-                            command=lambda: print("button O02 is clicked"))
+                            command=lambda: [self.send_to_client("Q02"), print("button O02 is clicked")])
         button_Q03 = Button(frame_Q03, padx=40, pady=20,
-                            command=lambda: print("button O03 is clicked"))
+                            command=lambda: [self.send_to_client("Q03"), print("button O03 is clicked")])
         button_Q04 = Button(frame_Q04, padx=40, pady=20,
-                            command=lambda: print("button O04 is clicked"))
+                            command=lambda: [self.send_to_client("Q04"), print("button O04 is clicked")])
         button_Q05 = Button(frame_Q05, padx=40, pady=20,
-                            command=lambda: print("button O05 is clicked"))
+                            command=lambda: [self.send_to_client("Q05"), print("button O05 is clicked")])
         button_Q06 = Button(frame_Q06, padx=40, pady=20,
-                            command=lambda: print("button O06 is clicked"))
+                            command=lambda: [self.send_to_client("Q06"), print("button O06 is clicked")])
         button_Q07 = Button(frame_Q07, padx=40, pady=20,
-                            command=lambda: print("button O07 is clicked"))
+                            command=lambda: [self.send_to_client("Q07"), print("button O07 is clicked")])
         button_Q10 = Button(frame_Q10, padx=40, pady=20,
-                            command=lambda: print("button O10 is clicked"))
+                            command=lambda: [self.send_to_client("Q10"), print("button O10 is clicked")])
         button_Q11 = Button(frame_Q11, padx=40, pady=20,
-                            command=lambda: print("button O11 is clicked"))
+                            command=lambda: [self.send_to_client("Q11"), print("button O11 is clicked")])
 
         # button positioning
         button_Q00.grid(row=1, column=0)
