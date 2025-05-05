@@ -1,5 +1,4 @@
-import asyncio
-from asyncua import Client
+from asyncua import Client, ua
 
 
 class PLCClient:
@@ -40,7 +39,10 @@ class PLCClient:
         if self.connected:
             try:
                 node = self.client.get_node(node_id)
-                await node.write_value(value)
+                variant = ua.Variant(value, ua.VariantType.Boolean)
+                data_value = ua.DataValue(variant)
+                await node.write_value(data_value)
+                print(f"Written value {value} to node {node_id}")
             except Exception as e:
                 print(f"Error writing to node {node_id}: {e}")
         else:
@@ -58,3 +60,11 @@ class PLCClient:
         else:
             print("Not connected to PLC")
             return None
+
+    async def toggle_output(self, node_id):
+        # Read the current value of the node
+        current_value = await self.read_node(node_id)
+        # Toggle the value
+        new_value = not current_value
+        # Write the new value to the node
+        await self.write_node(node_id, new_value)

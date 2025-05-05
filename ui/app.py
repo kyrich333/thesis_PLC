@@ -1,214 +1,284 @@
 import asyncio
 import threading
-import time
-from tkinter import Tk, ttk, Canvas
+from tkinter import Tk, ttk, Button, Label
 from plc.my_client import PLCClient
-from plc.nodes import NODE_ADDRESSES  # Import the NODE_ADDRESSES dictionary
+from asyncua import ua
+from asyncio import run_coroutine_threadsafe
+# opcua/nodes.py
+
+
+class AsyncioLoopThread(threading.Thread):
+    def __init__(self):
+        super().__init__(daemon=True)
+        self.loop = asyncio.new_event_loop()
+
+    def run(self):
+        asyncio.set_event_loop(self.loop)
+        self.loop.run_forever()
 
 
 class PLCApp:
-    def __init__(self, root):
+    def __init__(self, root, asyncio_thread):
         self.root = root
-        self.root.title("PLC Controller")
-        self.root.geometry("1920x1280")
-
+        self.asyncio_thread = asyncio_thread
+        self.root.title("PLC_Controller")
+        self.root.geometry("1920x1080")
         self.loop = asyncio.new_event_loop()
+        threading.Thread(target=self.loop.run_forever, daemon=True).start()
+
         self.plc = PLCClient("opc.tcp://192.168.0.1:4840")
+        asyncio.run_coroutine_threadsafe(self.plc.connect(), self.loop)
 
         self.notebook = ttk.Notebook(root)
         self.notebook.pack(fill="both", expand=True)
+        self.node_addresses = {
+            # INPUTS
+            "I00": "ns=4;i=16",
+            "I01": "ns=4;i=17",
+            "I02": "ns=4;i=18",
+            "I03": "ns=4;i=19",
+            "I04": "ns=4;i=20",
+            "I05": "ns=4;i=21",
+            "I06": "ns=4;i=22",
+            "I07": "ns=4;i=23",
+            "I10": "ns=4;i=24",
+            "I11": "ns=4;i=25",
+            "I12": "ns=4;i=26",
+            "I13": "ns=4;i=27",
+            "I14": "ns=4;i=28",
+            "I15": "ns=4;i=29",
 
-        self.node_id_mapping = {}  # Store Node IDs for each LED
-        self.create_home_tab()
-        self.create_tools_tab()
-        self.create_sequence_edit_tab()
+            # OUTPUTS
+            "Q00": "ns=4;i=5",
+            "Q01": "ns=4;i=6",
+            "Q02": "ns=4;i=7",
+            "Q03": "ns=4;i=8",
+            "Q04": "ns=4;i=9",
+            "Q05": "ns=4;i=10",
+            "Q06": "ns=4;i=11",
+            "Q07": "ns=4;i=12",
+            "Q10": "ns=4;i=13",
+            "Q11": "ns=4;i=14",
 
-    def create_home_tab(self):
-        tab = ttk.Frame(self.notebook)
-        self.notebook.add(tab, text="Home")
-        tab.grid_rowconfigure((0, 1), weight=1)
-        tab.grid_columnconfigure((0), weight=1)
+            # MEMORY
+        }
 
-        frame_up = ttk.Frame(tab, borderwidth=2, relief="groove")
+        self.create_tabs()
+
+    def send_to_client(self, node_id):
+        node_address = self.node_addresses.get(node_id)
+        if node_address:
+            asyncio.run_coroutine_threadsafe(
+                self.plc.toggle_output(node_address), self.loop)
+            print(f"Sent command to PLC: {node_address}")
+        else:
+            print(f"Node ID {node_id} not found in node addresses.")
+
+    def create_tabs(self):
+        # Home Tab
+        tab1 = ttk.Frame(self.notebook)
+        self.notebook.add(tab1, text="Home")
+        tab1.grid_rowconfigure((0, 1), weight=1)
+        tab1.grid_columnconfigure((0), weight=1)
+
+        frame_up = ttk.Frame(tab1, borderwidth=2, relief="groove")
         frame_up.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
-        ttk.Label(frame_up, text="Top Left Content").pack(padx=10, pady=10)
+        Label(frame_up, text="Top Left").pack(padx=10, pady=10)
 
-        frame_lo = ttk.Frame(tab, borderwidth=2, relief="groove")
+        frame_lo = ttk.Frame(tab1, borderwidth=2, relief="groove")
         frame_lo.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
-        ttk.Label(frame_lo, text="Bottom Left Content").pack(padx=10, pady=10)
+        Label(frame_lo, text="Top Right").pack(padx=10, pady=10)
 
-    def create_tools_tab(self):
-        tab = ttk.Frame(self.notebook)
-        self.notebook.add(tab, text="Tools")
-        tab.grid_rowconfigure((0, 1, 2, 3), weight=1)
-        tab.grid_columnconfigure((0), weight=1)
+        # Tools Tab
+        tab2 = ttk.Frame(self.notebook)
+        self.notebook.add(tab2, text="Tools")
+        tab2.grid_rowconfigure((0, 1, 2, 3), weight=1)
+        tab2.grid_columnconfigure((0), weight=1)
 
-        # Input Section
-        upper_title = ttk.Label(tab, text="Inputs")
+        # upper section tools tab
+        upper_title = Label(tab2, text="Inputs")
         upper_title.grid(row=0, column=0, padx=1, pady=1)
-        upper_section = ttk.Frame(tab, borderwidth=2, relief="groove")
+        upper_section = ttk.Frame(tab2, borderwidth=2, relief="groove")
         upper_section.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
-        self._create_io_elements(
-            upper_section, "I", range(2), range(8), add_led=True)
+        upper_section.grid_rowconfigure((0, 1), weight=1)
+        upper_section.grid_columnconfigure((0, 1, 2, 3, 4, 5, 6), weight=1)
 
-        # Output Section
-        lower_title = ttk.Label(tab, text="Outputs")
+        frame_00 = ttk.Frame(upper_section, borderwidth=2, relief="groove")
+        frame_00.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
+        Label(frame_00, text="I 0.0").grid(padx=10, pady=10)
+
+        frame_01 = ttk.Frame(upper_section, borderwidth=2, relief="groove")
+        frame_01.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)
+        Label(frame_01, text="I 0.1").grid(padx=10, pady=10)
+
+        frame_02 = ttk.Frame(upper_section, borderwidth=2, relief="groove")
+        frame_02.grid(row=0, column=2, sticky="nsew", padx=5, pady=5)
+        Label(frame_02, text="I 0.2").grid(padx=10, pady=10)
+
+        frame_03 = ttk.Frame(upper_section, borderwidth=2, relief="groove")
+        frame_03.grid(row=0, column=3, sticky="nsew", padx=5, pady=5)
+        Label(frame_03, text="I 0.3").grid(padx=10, pady=10)
+
+        frame_04 = ttk.Frame(upper_section, borderwidth=2, relief="groove")
+        frame_04.grid(row=0, column=4, sticky="nsew", padx=5, pady=5)
+        Label(frame_04, text="I 0.4").grid(padx=10, pady=10)
+
+        frame_05 = ttk.Frame(upper_section, borderwidth=2, relief="groove")
+        frame_05.grid(row=0, column=5, sticky="nsew", padx=5, pady=5)
+        Label(frame_05, text="I 0.5").grid(padx=10, pady=10)
+
+        frame_06 = ttk.Frame(upper_section, borderwidth=2, relief="groove")
+        frame_06.grid(row=0, column=6, sticky="nsew", padx=5, pady=5)
+        Label(frame_06, text="I 0.6").grid(padx=10, pady=10)
+
+        frame_07 = ttk.Frame(upper_section, borderwidth=2, relief="groove")
+        frame_07.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
+        Label(frame_07, text="I 0.7").grid(padx=10, pady=10)
+
+        frame_10 = ttk.Frame(upper_section, borderwidth=2, relief="groove")
+        frame_10.grid(row=1, column=1, sticky="nsew", padx=5, pady=5)
+        Label(frame_10, text="I 1.0").grid(padx=10, pady=10)
+
+        frame_11 = ttk.Frame(upper_section, borderwidth=2, relief="groove")
+        frame_11.grid(row=1, column=2, sticky="nsew", padx=5, pady=5)
+        Label(frame_11, text="I 1.1").grid(padx=10, pady=10)
+
+        frame_12 = ttk.Frame(upper_section, borderwidth=2, relief="groove")
+        frame_12.grid(row=1, column=3, sticky="nsew", padx=5, pady=5)
+        Label(frame_12, text="I 1.2").grid(padx=10, pady=10)
+
+        frame_13 = ttk.Frame(upper_section, borderwidth=2, relief="groove")
+        frame_13.grid(row=1, column=4, sticky="nsew", padx=5, pady=5)
+        Label(frame_13, text="I 1.3").grid(padx=10, pady=10)
+
+        frame_14 = ttk.Frame(upper_section, borderwidth=2, relief="groove")
+        frame_14.grid(row=1, column=5, sticky="nsew", padx=5, pady=5)
+        Label(frame_14, text="I 1.4").grid(padx=10, pady=10)
+
+        frame_15 = ttk.Frame(upper_section, borderwidth=2, relief="groove")
+        frame_15.grid(row=1, column=6, sticky="nsew", padx=5, pady=5)
+        Label(frame_15, text="I 1.5").grid(padx=10, pady=10)
+
+        # Output section tools tab
+        lower_title = Label(tab2, text="Outputs")
         lower_title.grid(row=2, column=0, padx=1, pady=1)
-        lower_section = ttk.Frame(tab, borderwidth=2, relief="groove")
+        lower_section = ttk.Frame(tab2, borderwidth=2, relief="groove")
         lower_section.grid(row=3, column=0, sticky="nsew", padx=5, pady=5)
-        self._create_io_elements(
-            lower_section, "O", range(2), range(5), add_led=True)
+        Label(lower_section, text="outputs").grid(padx=10, pady=10)
+        lower_section.grid_rowconfigure((0, 1), weight=1)
+        lower_section.grid_columnconfigure((0, 1, 2, 3, 4), weight=1)
 
-    def _create_io_elements(
-        self, parent_frame, io_type, row_range, col_range, add_led=False
-    ):
-        for row_index in row_range:
-            parent_frame.grid_rowconfigure(row_index, weight=1)
-        for col_index in col_range:
-            parent_frame.grid_columnconfigure(col_index, weight=1)
-        for row_index in row_range:
-            for col_index in col_range:
-                frame = ttk.Frame(parent_frame, borderwidth=2, relief="groove")
-                frame.grid(row=row_index, column=col_index,
-                           sticky="nsew", padx=5, pady=5)
-                label_text = f"{io_type} {row_index}.{col_index}"
-                ttk.Label(frame, text=label_text).pack(padx=10, pady=10)
+        frame_Q00 = ttk.Frame(lower_section, borderwidth=2, relief="groove")
+        frame_Q00.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
+        frame_Q00.grid_columnconfigure((0), weight=1)
+        frame_Q00.grid_rowconfigure((0, 1), weight=1)
+        Label(frame_Q00, text="O 0.0").grid(padx=10, pady=10)
 
-                if add_led:
-                    # Create a Canvas for the LED
-                    led_canvas = Canvas(frame, width=16, height=16, bg="white")
-                    led_canvas.pack(padx=5, pady=5)
-                    frame.led_canvas = led_canvas
-                    frame.led_circle = led_canvas.create_oval(
-                        2, 2, 14, 14, fill="gray", outline=""
-                    )
-                    frame.io_type = io_type
-                    frame.io_address = (row_index, col_index)
+        frame_Q01 = ttk.Frame(lower_section, borderwidth=2, relief="groove")
+        frame_Q01.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)
+        frame_Q01.grid_columnconfigure((0), weight=1)
+        frame_Q01.grid_rowconfigure((0, 1), weight=1)
+        Label(frame_Q01, text="O 0.1").grid(padx=10, pady=10)
 
-                    # **Crucial:** Assign Node ID here, using the dictionary from plc/nodes.py
-                    # Construct the key
-                    key = f"{io_type.lower()}{row_index}{col_index}"
-                    if key in NODE_ADDRESSES:
-                        node_id = NODE_ADDRESSES[key]
-                        self.node_id_mapping[(
-                            io_type, row_index, col_index)] = node_id
-                    else:
-                        print(
-                            f"Warning: Node ID for {key} not found in NODE_ADDRESSES"
-                        )
-                        # Handle the error, e.g., set a default Node ID or skip the LED
-                        self.node_id_mapping[
-                            (io_type, row_index, col_index)
-                        ] = None  # important:  set it to none rather than some random string
+        frame_Q02 = ttk.Frame(lower_section, borderwidth=2, relief="groove")
+        frame_Q02.grid(row=0, column=2, sticky="nsew", padx=5, pady=5)
+        frame_Q02.grid_columnconfigure((0), weight=1)
+        frame_Q02.grid_rowconfigure((0, 1), weight=1)
+        Label(frame_Q02, text="O 0.2").grid(padx=10, pady=10)
 
-    def create_sequence_edit_tab(self):
-        tab = ttk.Frame(self.notebook)
-        self.notebook.add(tab, text="Sequence Edit")
-        tab.grid_rowconfigure((0, 1, 2), weight=1)
-        tab.grid_columnconfigure((0, 1), weight=1)
+        frame_Q03 = ttk.Frame(lower_section, borderwidth=2, relief="groove")
+        frame_Q03.grid(row=0, column=3, sticky="nsew", padx=5, pady=5)
+        frame_Q03.grid_columnconfigure((0), weight=1)
+        frame_Q03.grid_rowconfigure((0, 1), weight=1)
+        Label(frame_Q03, text="O 0.3").grid(padx=10, pady=10)
 
-    def update_led(self, io_type, address, value):
-        """Updates the LED color based on the given IO type, address, and value."""
-        for child in self.notebook.winfo_children():
-            if child.winfo_name() == "Tools":
-                for section_child in child.winfo_children():
-                    if isinstance(section_child, ttk.Frame):
-                        for frame_child in section_child.winfo_children():
-                            if (
-                                hasattr(frame_child, "io_type")
-                                and hasattr(frame_child, "io_address")
-                            ):
-                                if (
-                                    frame_child.io_type == io_type
-                                    and frame_child.io_address == address
-                                ):
-                                    led_canvas = frame_child.led_canvas
-                                    led_color = "green" if value else "gray"
-                                    led_canvas.itemconfig(
-                                        frame_child.led_circle, fill=led_color
-                                    )
-                                    return
-        print(
-            f"LED with type {io_type} and address {address} not found"
-        )  # Error Handling
+        frame_Q04 = ttk.Frame(lower_section, borderwidth=2, relief="groove")
+        frame_Q04.grid(row=0, column=4, sticky="nsew", padx=5, pady=5)
+        frame_Q04.grid_columnconfigure((0), weight=1)
+        frame_Q04.grid_rowconfigure((0, 1), weight=1)
+        Label(frame_Q04, text="O 0.4").grid(padx=10, pady=10)
 
-    async def read_plc_values(self):
-        """
-        Reads values from the PLC and updates the LEDs.  This function runs in the asyncio loop.
-        """
-        while True:
-            if not self.plc.connected:
-                print("Waiting for PLC to connect...")
-                await asyncio.sleep(1)  # Wait and check again
-                continue  # Skip the rest of the loop and try again
+        frame_Q05 = ttk.Frame(lower_section, borderwidth=2, relief="groove")
+        frame_Q05.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
+        frame_Q05.grid_columnconfigure((0), weight=1)
+        frame_Q05.grid_rowconfigure((0, 1), weight=1)
+        Label(frame_Q05, text="O 0.5").grid(padx=10, pady=10)
 
-            for (
-                io_type,
-                row_index,
-                col_index,
-            ), node_id in self.node_id_mapping.items():
-                if node_id is not None:  # only read if node_id is not None
-                    try:
-                        value = await self.plc.read_node(
-                            node_id
-                        )  # Read from PLC
-                        if value is not None:
-                            self.update_led(
-                                io_type, (row_index, col_index), value
-                            )  # Update LED color
-                    except Exception as e:
-                        print(f"Error reading from PLC: {e}")
-                        # Consider if you want to attempt a reconnect here.
-                await asyncio.sleep(
-                    0.1
-                    # Add a small delay to prevent overwhelming the PLC.  Adjust as needed.
-                )
-            await asyncio.sleep(1)  # Read all values every second
+        frame_Q06 = ttk.Frame(lower_section, borderwidth=2, relief="groove")
+        frame_Q06.grid(row=1, column=1, sticky="nsew", padx=5, pady=5)
+        frame_Q06.grid_columnconfigure((0), weight=1)
+        frame_Q06.grid_rowconfigure((0, 1), weight=1)
+        Label(frame_Q06, text="O 0.6").grid(padx=10, pady=10)
 
-    async def close_plc_connection(self):
-        """Close the PLC connection when the application exits."""
-        if self.plc.connected:
-            await self.plc.disconnect()
+        frame_Q07 = ttk.Frame(lower_section, borderwidth=2, relief="groove")
+        frame_Q07.grid(row=1, column=2, sticky="nsew", padx=5, pady=5)
+        frame_Q07.grid_columnconfigure((0), weight=1)
+        frame_Q07.grid_rowconfigure((0, 1), weight=1)
+        Label(frame_Q07, text="O 0.7").grid(padx=10, pady=10)
 
-    def __del__(self):
-        """Ensure the PLC connection is closed when the object is destroyed."""
-        if self.loop and self.loop.is_running():
-            self.loop.call_soon_threadsafe(
-                asyncio.run_coroutine_threadsafe,
-                self.close_plc_connection(),
-                self.loop,
-            )  # use call_soon_threadsafe
+        frame_Q10 = ttk.Frame(lower_section, borderwidth=2, relief="groove")
+        frame_Q10.grid(row=1, column=3, sticky="nsew", padx=5, pady=5)
+        frame_Q10.grid_columnconfigure((0), weight=1)
+        frame_Q10.grid_rowconfigure((0, 1), weight=1)
+        Label(frame_Q10, text="O 1.0").grid(padx=10, pady=10)
+
+        frame_Q11 = ttk.Frame(lower_section, borderwidth=2, relief="groove")
+        frame_Q11.grid(row=1, column=4, sticky="nsew", padx=5, pady=5)
+        frame_Q11.grid_columnconfigure((0), weight=1)
+        frame_Q11.grid_rowconfigure((0, 1), weight=1)
+        Label(frame_Q11, text="O 1.1").grid(padx=10, pady=10)
+
+        # button creation
+
+        button_Q00 = Button(frame_Q00, padx=40, pady=20,
+                            command=lambda: [self.send_to_client("Q00"), print("button O00 is clicked")])
+        button_Q01 = Button(frame_Q01, padx=40, pady=20,
+                            command=lambda: [self.send_to_client("ns=4;i=5"), print("button O01 is clicked")])
+        button_Q02 = Button(frame_Q02, padx=40, pady=20,
+                            command=lambda: print("button O02 is clicked"))
+        button_Q03 = Button(frame_Q03, padx=40, pady=20,
+                            command=lambda: print("button O03 is clicked"))
+        button_Q04 = Button(frame_Q04, padx=40, pady=20,
+                            command=lambda: print("button O04 is clicked"))
+        button_Q05 = Button(frame_Q05, padx=40, pady=20,
+                            command=lambda: print("button O05 is clicked"))
+        button_Q06 = Button(frame_Q06, padx=40, pady=20,
+                            command=lambda: print("button O06 is clicked"))
+        button_Q07 = Button(frame_Q07, padx=40, pady=20,
+                            command=lambda: print("button O07 is clicked"))
+        button_Q10 = Button(frame_Q10, padx=40, pady=20,
+                            command=lambda: print("button O10 is clicked"))
+        button_Q11 = Button(frame_Q11, padx=40, pady=20,
+                            command=lambda: print("button O11 is clicked"))
+
+        # button positioning
+        button_Q00.grid(row=1, column=0)
+        button_Q01.grid(row=1, column=0)
+        button_Q02.grid(row=1, column=0)
+        button_Q03.grid(row=1, column=0)
+        button_Q04.grid(row=1, column=0)
+        button_Q05.grid(row=1, column=0)
+        button_Q06.grid(row=1, column=0)
+        button_Q07.grid(row=1, column=0)
+        button_Q10.grid(row=1, column=0)
+        button_Q11.grid(row=1, column=0)
+
+        # sequence edit Tab
+        tab3 = ttk.Frame(self.notebook)
+        self.notebook.add(tab3, text="Sequence Edit")
+        tab3.grid_rowconfigure((0, 1, 2), weight=1)
+        tab3.grid_columnconfigure((0, 1), weight=1)
 
 
 def main():
+
+    asyncio_thread = AsyncioLoopThread()
+    asyncio_thread.start()
+
     root = Tk()
-    app = PLCApp(root)
-
-    async def run_app():
-        try:
-            # Ensure the PLC connection is established before proceeding
-            await app.plc.connect()
-            print("PLC Connected. Starting GUI and data updates.")
-            # Start the data reading loop in the asyncio event loop
-            # Start read_plc_values as a background task
-            asyncio.create_task(app.read_plc_values())
-        except Exception as e:
-            # Handle errors during connect or read
-            print(f"An error occurred: {e}")
-        # finally: # Removed:  Moved to __del__
-        #    await app.close_plc_connection()
-
-    # Run the asyncio event loop in a separate thread
-    loop_thread = threading.Thread(
-        target=start_asyncio_loop, args=(app.loop, run_app))
-    loop_thread.daemon = True  # Allow the program to exit even if this thread is running
-    loop_thread.start()
-
-    root.mainloop()  # Start the Tkinter main loop (this needs to be done in the main thread)
+    app = PLCApp(root, asyncio_thread)
+    root.mainloop()
 
 
-def start_asyncio_loop(loop, run_app):
-    """Start the asyncio loop and run the run_app function."""
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(run_app())
-    loop.close()
+if __name__ == "__main__":
+    main()
