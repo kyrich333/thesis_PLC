@@ -62,6 +62,35 @@ class PLCApp:
 
             # MEMORY
         }
+        self.io_states = {
+            # INPUTS
+            "I00": False,
+            "I01": False,
+            "I02": False,
+            "I03": False,
+            "I04": False,
+            "I05": False,
+            "I06": False,
+            "I07": False,
+            "I10": False,
+            "I11": False,
+            "I12": False,
+            "I13": False,
+            "I14": False,
+            "I15": False,
+
+            # OUTPUTS
+            "Q00": False,
+            "Q01": False,
+            "Q02": False,
+            "Q03": False,
+            "Q04": False,
+            "Q05": False,
+            "Q06": False,
+            "Q07": False,
+            "Q10": False,
+            "Q11": False,
+        }
 
         self.create_tabs()
 
@@ -73,6 +102,37 @@ class PLCApp:
             print(f"Sent command to PLC: {node_address}")
         else:
             print(f"Node ID {key} not found in node addresses.")
+
+    def get_from_client(self, key):
+        node_address = self.node_addresses.get(key)
+        if node_address:
+            future = asyncio.run_coroutine_threadsafe(
+                self.plc.read_node(node_address), self.loop)
+            try:
+                node_value = future.result()  # optional timeout
+                print(f"Received value from {node_address}: {node_value}")
+                return node_value
+
+            except Exception as e:
+                print(f"Error reading node {node_address}: {e}")
+        else:
+            print(f"Node ID {key} not found in node addresses.")
+
+    def change_button_color(self, key):
+        button_value = self.get_from_client(key)
+        if button_value == True:
+            button = self.button_addresses[key]
+            button.config(bg="green")
+        elif button_value == False:
+            button = self.button_addresses[key]
+            button.config(bg="red")
+        else:
+            print(f"Node ID {key} not found in node addresses.")
+
+    def handle_button_click(self, key):
+        self.send_to_client(key)
+        self.get_from_client(key)
+        self.change_button_color(key)
 
     def create_tabs(self):
         # Home Tab
@@ -172,84 +232,84 @@ class PLCApp:
         frame_Q00.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
         frame_Q00.grid_columnconfigure((0), weight=1)
         frame_Q00.grid_rowconfigure((0, 1), weight=1)
-        Label(frame_Q00, text="O 0.0").grid(padx=10, pady=10)
+        Label(frame_Q00, text="Q 0.0").grid(padx=10, pady=10)
 
         frame_Q01 = ttk.Frame(lower_section, borderwidth=2, relief="groove")
         frame_Q01.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)
         frame_Q01.grid_columnconfigure((0), weight=1)
         frame_Q01.grid_rowconfigure((0, 1), weight=1)
-        Label(frame_Q01, text="O 0.1").grid(padx=10, pady=10)
+        Label(frame_Q01, text="Q 0.1").grid(padx=10, pady=10)
 
         frame_Q02 = ttk.Frame(lower_section, borderwidth=2, relief="groove")
         frame_Q02.grid(row=0, column=2, sticky="nsew", padx=5, pady=5)
         frame_Q02.grid_columnconfigure((0), weight=1)
         frame_Q02.grid_rowconfigure((0, 1), weight=1)
-        Label(frame_Q02, text="O 0.2").grid(padx=10, pady=10)
+        Label(frame_Q02, text="Q 0.2").grid(padx=10, pady=10)
 
         frame_Q03 = ttk.Frame(lower_section, borderwidth=2, relief="groove")
         frame_Q03.grid(row=0, column=3, sticky="nsew", padx=5, pady=5)
         frame_Q03.grid_columnconfigure((0), weight=1)
         frame_Q03.grid_rowconfigure((0, 1), weight=1)
-        Label(frame_Q03, text="O 0.3").grid(padx=10, pady=10)
+        Label(frame_Q03, text="Q 0.3").grid(padx=10, pady=10)
 
         frame_Q04 = ttk.Frame(lower_section, borderwidth=2, relief="groove")
         frame_Q04.grid(row=0, column=4, sticky="nsew", padx=5, pady=5)
         frame_Q04.grid_columnconfigure((0), weight=1)
         frame_Q04.grid_rowconfigure((0, 1), weight=1)
-        Label(frame_Q04, text="O 0.4").grid(padx=10, pady=10)
+        Label(frame_Q04, text="Q 0.4").grid(padx=10, pady=10)
 
         frame_Q05 = ttk.Frame(lower_section, borderwidth=2, relief="groove")
         frame_Q05.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
         frame_Q05.grid_columnconfigure((0), weight=1)
         frame_Q05.grid_rowconfigure((0, 1), weight=1)
-        Label(frame_Q05, text="O 0.5").grid(padx=10, pady=10)
+        Label(frame_Q05, text="Q 0.5").grid(padx=10, pady=10)
 
         frame_Q06 = ttk.Frame(lower_section, borderwidth=2, relief="groove")
         frame_Q06.grid(row=1, column=1, sticky="nsew", padx=5, pady=5)
         frame_Q06.grid_columnconfigure((0), weight=1)
         frame_Q06.grid_rowconfigure((0, 1), weight=1)
-        Label(frame_Q06, text="O 0.6").grid(padx=10, pady=10)
+        Label(frame_Q06, text="Q 0.6").grid(padx=10, pady=10)
 
         frame_Q07 = ttk.Frame(lower_section, borderwidth=2, relief="groove")
         frame_Q07.grid(row=1, column=2, sticky="nsew", padx=5, pady=5)
         frame_Q07.grid_columnconfigure((0), weight=1)
         frame_Q07.grid_rowconfigure((0, 1), weight=1)
-        Label(frame_Q07, text="O 0.7").grid(padx=10, pady=10)
+        Label(frame_Q07, text="Q 0.7").grid(padx=10, pady=10)
 
         frame_Q10 = ttk.Frame(lower_section, borderwidth=2, relief="groove")
         frame_Q10.grid(row=1, column=3, sticky="nsew", padx=5, pady=5)
         frame_Q10.grid_columnconfigure((0), weight=1)
         frame_Q10.grid_rowconfigure((0, 1), weight=1)
-        Label(frame_Q10, text="O 1.0").grid(padx=10, pady=10)
+        Label(frame_Q10, text="Q 1.0").grid(padx=10, pady=10)
 
         frame_Q11 = ttk.Frame(lower_section, borderwidth=2, relief="groove")
         frame_Q11.grid(row=1, column=4, sticky="nsew", padx=5, pady=5)
         frame_Q11.grid_columnconfigure((0), weight=1)
         frame_Q11.grid_rowconfigure((0, 1), weight=1)
-        Label(frame_Q11, text="O 1.1").grid(padx=10, pady=10)
+        Label(frame_Q11, text="Q 1.1").grid(padx=10, pady=10)
 
         # button creation
 
         button_Q00 = Button(frame_Q00, padx=40, pady=20,
-                            command=lambda: [self.send_to_client("Q00"), print("button O00 is clicked")])
+                            command=lambda: [self.handle_button_click("Q00"), print("button O00 is clicked")])
         button_Q01 = Button(frame_Q01, padx=40, pady=20,
-                            command=lambda: [self.send_to_client("Q01"), print("button O01 is clicked")])
+                            command=lambda: [self.handle_button_click("Q01"), print("button O01 is clicked")])
         button_Q02 = Button(frame_Q02, padx=40, pady=20,
-                            command=lambda: [self.send_to_client("Q02"), print("button O02 is clicked")])
+                            command=lambda: [self.handle_button_click("Q02"), print("button O02 is clicked")])
         button_Q03 = Button(frame_Q03, padx=40, pady=20,
-                            command=lambda: [self.send_to_client("Q03"), print("button O03 is clicked")])
+                            command=lambda: [self.handle_button_click("Q03"), print("button O03 is clicked")])
         button_Q04 = Button(frame_Q04, padx=40, pady=20,
-                            command=lambda: [self.send_to_client("Q04"), print("button O04 is clicked")])
+                            command=lambda: [self.handle_button_click("Q04"), print("button O04 is clicked")])
         button_Q05 = Button(frame_Q05, padx=40, pady=20,
-                            command=lambda: [self.send_to_client("Q05"), print("button O05 is clicked")])
+                            command=lambda: [self.handle_button_click("Q05"), print("button O05 is clicked")])
         button_Q06 = Button(frame_Q06, padx=40, pady=20,
-                            command=lambda: [self.send_to_client("Q06"), print("button O06 is clicked")])
+                            command=lambda: [self.handle_button_click("Q06"), print("button O06 is clicked")])
         button_Q07 = Button(frame_Q07, padx=40, pady=20,
-                            command=lambda: [self.send_to_client("Q07"), print("button O07 is clicked")])
+                            command=lambda: [self.handle_button_click("Q07"), print("button O07 is clicked")])
         button_Q10 = Button(frame_Q10, padx=40, pady=20,
-                            command=lambda: [self.send_to_client("Q10"), print("button O10 is clicked")])
+                            command=lambda: [self.handle_button_click("Q10"), print("button O10 is clicked")])
         button_Q11 = Button(frame_Q11, padx=40, pady=20,
-                            command=lambda: [self.send_to_client("Q11"), print("button O11 is clicked")])
+                            command=lambda: [self.handle_button_click("Q11"), print("button O11 is clicked")])
 
         # button positioning
         button_Q00.grid(row=1, column=0)
@@ -262,6 +322,38 @@ class PLCApp:
         button_Q07.grid(row=1, column=0)
         button_Q10.grid(row=1, column=0)
         button_Q11.grid(row=1, column=0)
+
+        self.button_addresses = {
+            # INPUTS
+            # "I00": "ns=4;i=16",
+            # "I01": "ns=4;i=17",
+            # "I02": "ns=4;i=18",
+            # "I03": "ns=4;i=19",
+            # "I04": "ns=4;i=20",
+            # "I05": "ns=4;i=21",
+            # "I06": "ns=4;i=22",
+            # "I07": "ns=4;i=23",
+            # "I10": "ns=4;i=24",
+            # "I11": "ns=4;i=25",
+            # "I12": "ns=4;i=26",
+            # "I13": "ns=4;i=27",
+            # "I14": "ns=4;i=28",
+            # "I15": "ns=4;i=29",
+
+            # OUTPUTS
+            "Q00": button_Q00,
+            "Q01": button_Q01,
+            "Q02": button_Q02,
+            "Q03": button_Q03,
+            "Q04": button_Q04,
+            "Q05": button_Q05,
+            "Q06": button_Q06,
+            "Q07": button_Q07,
+            "Q10": button_Q10,
+            "Q11": button_Q11,
+
+            # MEMORY
+        }
 
         # sequence edit Tab
         tab3 = ttk.Frame(self.notebook)
