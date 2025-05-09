@@ -2,8 +2,7 @@ import asyncio
 import threading
 from tkinter import Tk, ttk, Button, Label, Canvas
 from plc.my_client import PLCClient
-from asyncua import ua
-from asyncio import run_coroutine_threadsafe
+
 # opcua/nodes.py
 
 
