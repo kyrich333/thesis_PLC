@@ -32,7 +32,7 @@ class PLCClient:
                 print(f"Error reading node {node_id}: {e}")
                 return None
         else:
-            print("Not connected to PLC")
+            # print("Not connected to PLC (1)")
             return None
 
     async def write_node(self, node_id, value):
@@ -46,7 +46,7 @@ class PLCClient:
             except Exception as e:
                 print(f"Error writing to node {node_id}: {e}")
         else:
-            print("Not connected to PLC")
+            print("Not connected to PLC(2)")
 
     async def browse(self, node_id):
         if self.connected:
@@ -58,7 +58,7 @@ class PLCClient:
                 print(f"Error browsing node {node_id}: {e}")
                 return None
         else:
-            print("Not connected to PLC")
+            print("Not connected to PLC(3)")
             return None
 
     async def toggle_output(self, node_id):

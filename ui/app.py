@@ -1,8 +1,9 @@
 import asyncio
 import threading
+import importlib
 from tkinter import Tk, ttk, Button, Label, Canvas
 from plc.my_client import PLCClient
-from plc.my_nodes import SubHandler, io_addresses, io_state
+from plc.my_nodes import io_addresses, io_state
 
 
 class AsyncioLoopThread(threading.Thread):
@@ -77,8 +78,7 @@ class PLCApp:
 
     def handle_button_click(self, key):
         self.send_to_client(key)
-        self.get_from_client(key)
-        self.change_widget_color(key)
+        asyncio.run_coroutine_threadsafe(self.update_io_states(key), self.loop)
 
     async def update_io_states(self, key):
         node_value = await self.get_from_client(key)
@@ -93,7 +93,18 @@ class PLCApp:
             tasks = [self.update_io_states(key)
                      for key in self.io_states.keys()]
             await asyncio.gather(*tasks)
-            await asyncio.sleep(0.1)  # Adjust the sleep time as needed
+            await asyncio.sleep(0.025)  # Adjust the sleep time as needed
+
+    def run_selected_sequence(self, sequence_name):
+        try:
+            module = importlib.import_module(
+                f"product_sequence.{sequence_name}")
+            asyncio.run_coroutine_threadsafe(
+                module.run_sequence(self.plc), self.loop
+            )
+            print(f"Running sequence: {sequence_name}")
+        except Exception as e:
+            print(f"Failed to run sequence {sequence_name}: {e}")
 
     def create_tabs(self):
         # Home Tab
@@ -104,11 +115,24 @@ class PLCApp:
 
         frame_up = ttk.Frame(tab1, borderwidth=2, relief="groove")
         frame_up.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
-        Label(frame_up, text="Top Left").pack(padx=10, pady=10)
+        frame_up.grid_columnconfigure((0, 1), weight=1)
+        frame_up.grid_rowconfigure((0), weight=1)
+
+        frame_up_left = ttk.Frame(frame_up, borderwidth=2, relief="groove")
+        frame_up_left.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
+        Label(frame_up_left, text="On going : ").grid(padx=10, pady=10)
+
+        button_start = Button(frame_up_left, padx=40, pady=20, bg="grey", text="start",
+                              command=lambda: self.run_selected_sequence("product_B"))
+        button_start.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
+
+        frame_up_right = ttk.Frame(frame_up, borderwidth=2, relief="groove")
+        frame_up_right.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)
+        Label(frame_up_right, text="Queue : ").grid(padx=10, pady=10)
 
         frame_lo = ttk.Frame(tab1, borderwidth=2, relief="groove")
         frame_lo.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
-        Label(frame_lo, text="Top Right").pack(padx=10, pady=10)
+        Label(frame_lo, text="lower section").grid(padx=10, pady=10)
 
         # Tools Tab
         tab2 = ttk.Frame(self.notebook)
