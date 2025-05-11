@@ -123,7 +123,7 @@ class PLCApp:
         Label(frame_up_left, text="On going : ").grid(padx=10, pady=10)
 
         button_start = Button(frame_up_left, padx=40, pady=20, bg="grey", text="start",
-                              command=lambda: self.run_selected_sequence("product_B"))
+                              command=lambda: self.run_selected_sequence("product_A"))
         button_start.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
 
         frame_up_right = ttk.Frame(frame_up, borderwidth=2, relief="groove")
