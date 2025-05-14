@@ -1,9 +1,12 @@
 import asyncio
 import threading
 import importlib
-from tkinter import Tk, ttk, Button, Label, Canvas
+import os
+from tkinter import Tk, ttk, Button, Label, Canvas, StringVar
 from plc.my_client import PLCClient
 from plc.my_nodes import io_addresses, io_state
+
+product_sequence_folder = '/home/richky/thesis_app/product_sequence'
 
 
 class AsyncioLoopThread(threading.Thread):
@@ -34,8 +37,24 @@ class PLCApp:
         self.notebook.pack(fill="both", expand=True)
         self.node_addresses = io_addresses
         self.io_states = io_state
+        self.selected_sequence = StringVar()
 
         self.create_tabs()
+
+    def list_files_in_directory(self, directory):
+        # List all files in the directory
+        return os.listdir(directory)
+
+    def update_combobox(self):
+        # Get the files from the product sequence folder
+        files = self.list_files_in_directory(product_sequence_folder)
+        # Update the combobox with file names
+        files = [
+            f[:-3] for f in files if f.endswith('.py') and not f.startswith('__pycache__')
+        ]
+        self.sequence_combobox['values'] = files
+        if files:
+            self.selected_sequence.set(files[0])
 
     def send_to_client(self, key):
         node_address = self.node_addresses.get(key)
@@ -122,9 +141,15 @@ class PLCApp:
         frame_up_left.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
         Label(frame_up_left, text="On going : ").grid(padx=10, pady=10)
 
+        self.sequence_combobox = ttk.Combobox(
+            frame_up_left, textvariable=self.selected_sequence)
+        self.sequence_combobox.grid(row=0, column=2)
+
+        self.update_combobox()
+
         button_start = Button(frame_up_left, padx=40, pady=20, bg="grey", text="start",
-                              command=lambda: self.run_selected_sequence("product_A"))
-        button_start.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
+                              command=lambda: self.run_selected_sequence(self.selected_sequence.get()))
+        button_start.grid(row=0, column=3, sticky="nsew", padx=5, pady=5)
 
         frame_up_right = ttk.Frame(frame_up, borderwidth=2, relief="groove")
         frame_up_right.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)
