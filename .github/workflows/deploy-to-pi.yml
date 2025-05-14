@@ -18,7 +18,7 @@ jobs:
           host: serveo.net
           port: 12345
           username: ky  # e.g., pi
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          key: ${{ secrets.PI_SSH_KEY }}
           script: |
             cd /home/<your_pi_username>/thesis_PLC
             git pull origin master
