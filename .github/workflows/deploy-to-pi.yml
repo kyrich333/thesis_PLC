@@ -20,5 +20,5 @@ jobs:
           username: ky  # e.g., pi
           key: ${{ secrets.PI_SSH_KEY }}
           script: |
-            cd /home/<your_pi_username>/thesis_PLC
+            cd /home/ky/thesis_PLC
             git pull origin master
