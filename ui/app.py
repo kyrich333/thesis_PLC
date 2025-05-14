@@ -2,6 +2,7 @@ import asyncio
 import threading
 import importlib
 import os
+import sys
 from tkinter import Tk, ttk, Button, Label, Canvas, StringVar
 from plc.my_client import PLCClient
 from plc.my_nodes import io_addresses, io_state
@@ -116,8 +117,13 @@ class PLCApp:
 
     def run_selected_sequence(self, sequence_name):
         try:
-            module = importlib.import_module(
-                f"product_sequence.{sequence_name}")
+            module_path = f"product_sequence.{sequence_name}"
+            if module_path in sys.modules:
+                module = importlib.reload(sys.modules[module_path])
+
+            else:
+                module = importlib.import_module(module_path)
+
             asyncio.run_coroutine_threadsafe(
                 module.run_sequence(self.plc), self.loop
             )

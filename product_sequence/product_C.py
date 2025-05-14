@@ -6,7 +6,11 @@ async def run_sequence(plc):
     try:
         # Get addresses
         q00 = io_addresses.get("Q00")
-        q01 = io_addresses.get("Q02")
+        q01 = io_addresses.get("Q01")
+        q02 = io_addresses.get("Q02")
+        q03 = io_addresses.get("Q03")
+        q04 = io_addresses.get("Q04")
+        q05 = io_addresses.get("Q05")
         i00 = io_addresses.get("I00")
 
         # Validate required addresses
@@ -26,16 +30,22 @@ async def run_sequence(plc):
         print("Input I00 is active. Running sequence...")
 
         # Run output sequence
-
         await plc.write_node(q00, True)
-        await asyncio.sleep(0.1)
-        await plc.write_node(q00, False)
+        await asyncio.sleep(1)
         await plc.write_node(q01, True)
         await asyncio.sleep(1)
-        await plc.write_node(q01, False)
+        await plc.write_node(q02, True)
+        await asyncio.sleep(1)
+        await plc.write_node(q03, True)
+        await asyncio.sleep(1)
+        await plc.write_node(q04, True)
         await plc.write_node(q00, False)
+        await plc.write_node(q01, False)
+        await plc.write_node(q02, False)
+        await plc.write_node(q03, False)
+        await plc.write_node(q04, False)
 
-        print("Sequence B finished.")
+        print("Sequence A finished.")
 
     except Exception as e:
         print(f"Error in run_sequence: {e}")

@@ -31,17 +31,22 @@ async def run_sequence(plc):
 
         # Run output sequence
         await plc.write_node(q00, True)
-        await asyncio.sleep(5)
+        await asyncio.sleep(1)
         await plc.write_node(q01, True)
-        await asyncio.sleep(10)
-        await plc.write_node(q01, False)
+        await asyncio.sleep(1)
         await plc.write_node(q02, True)
-        await asyncio.sleep(5)
+        await asyncio.sleep(1)
         await plc.write_node(q03, True)
+        await asyncio.sleep(1)
+        await plc.write_node(q04, True)
+        await asyncio.sleep(1)
+        await plc.write_node(q05, True)
+        await plc.write_node(q00, False)
+        await plc.write_node(q01, False)
         await plc.write_node(q02, False)
-        await asyncio.sleep(10)
         await plc.write_node(q03, False)
-
+        await plc.write_node(q04, False)
+        await plc.write_node(q05, False)
         print("Sequence A finished.")
 
     except Exception as e:
