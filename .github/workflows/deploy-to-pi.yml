@@ -3,19 +3,22 @@ name: Deploy to Raspberry Pi
 on:
   push:
     branches:
-      - master  # Change if you use a different branch
+      - master
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Deploy via SSH
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Deploy to Raspberry Pi via Serveo
         uses: appleboy/ssh-action@v0.1.10
         with:
-          host: ${{ secrets.PI_HOST }}
-          username: ${{ secrets.PI_USERNAME }}
-          key: ${{ secrets.PI_SSH_KEY }}
+          host: serveo.net
+          port: 12345
+          username: ky  # e.g., pi
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /home/ky/thesis_PLC
+            cd /home/<your_pi_username>/thesis_PLC
             git pull origin master
