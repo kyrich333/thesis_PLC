@@ -26,8 +26,10 @@ async def run_sequence(plc):
         print("Input I00 is active. Running sequence...")
 
         # Run output sequence
-        await plc.write_node(q00, True)
-        await asyncio.sleep(1)
+        for _ in range(10):
+            await plc.write_node(q00, True)
+            await asyncio.sleep(0.1)
+            await plc.write_node(q00, False)
 
         await plc.write_node(q01, True)
         await asyncio.sleep(1)

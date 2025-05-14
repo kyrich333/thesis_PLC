@@ -139,17 +139,21 @@ class PLCApp:
 
         frame_up_left = ttk.Frame(frame_up, borderwidth=2, relief="groove")
         frame_up_left.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
-        Label(frame_up_left, text="On going : ").grid(padx=10, pady=10)
+        Label(frame_up_left, text="Sequence : ").grid(padx=10, pady=10)
 
         self.sequence_combobox = ttk.Combobox(
-            frame_up_left, textvariable=self.selected_sequence)
+            frame_up_left, textvariable=self.selected_sequence, state="readonly")
         self.sequence_combobox.grid(row=0, column=2)
 
         self.update_combobox()
 
-        button_start = Button(frame_up_left, padx=40, pady=20, bg="grey", text="start",
+        button_start = Button(frame_up_left, padx=40, pady=20, bg="grey", text="register",
                               command=lambda: self.run_selected_sequence(self.selected_sequence.get()))
         button_start.grid(row=0, column=3, sticky="nsew", padx=5, pady=5)
+
+        refresh_button = Button(frame_up_left, padx=40, pady=20,
+                                bg="grey", text="Refresh", command=self.update_combobox)
+        refresh_button.grid(row=0, column=4, sticky="nsew", padx=5, pady=5)
 
         frame_up_right = ttk.Frame(frame_up, borderwidth=2, relief="groove")
         frame_up_right.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)
