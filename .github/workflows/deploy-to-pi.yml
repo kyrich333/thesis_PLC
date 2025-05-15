@@ -7,20 +7,15 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Deploy to Raspberry Pi via SSH
-        uses: appleboy/ssh-action@v1
-        with:
-          host: 100.81.163.128
-          username: ${{ secrets.PI_USERNAME }}
-          key: ${{ secrets.PI_SSH_KEY }}
-          script: |
-            cd /home/ky/thesis_PLC
-            git pull
-            # Add your deploy command below if needed
-            # ./run.sh or python3 main.py
+      - name: Pull latest code and deploy
+        run: |
+          cd /home/ky/thesis_PLC
+          git pull
+          # your deploy commands here, for example:
+          # python3 main.py
