@@ -16,7 +16,7 @@ jobs:
         uses: appleboy/ssh-action@v0.1.10
         with:
           host: ky.pagekite.me
-          port: 2222
+          port: 22
           username: ky 
           key: ${{ secrets.PI_SSH_KEY }}
           script: |
