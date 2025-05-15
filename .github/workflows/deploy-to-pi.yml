@@ -9,15 +9,15 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
+      - name: Deploy to raspberry Pi via pagekite
         uses: actions/checkout@v3
 
       - name: Deploy to Raspberry Pi via Serveo
         uses: appleboy/ssh-action@v0.1.10
         with:
-          host: serveo.net
-          port: 12345
-          username: ky  # e.g., pi
+          host: ky.pagekite.me
+          port: 2222
+          username: ky 
           key: ${{ secrets.PI_SSH_KEY }}
           script: |
             cd /home/ky/thesis_PLC
