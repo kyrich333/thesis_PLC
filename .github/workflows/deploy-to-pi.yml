@@ -14,9 +14,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Deploy to Raspberry Pi via SSH
-        uses: appleboy/ssh-action@v1.0.0
+        uses: appleboy/ssh-action@v1
         with:
-          host: ${{ secrets.PI_HOST }}
+          host: 100.81.163.128
           username: ${{ secrets.PI_USERNAME }}
           key: ${{ secrets.PI_SSH_KEY }}
           script: |
