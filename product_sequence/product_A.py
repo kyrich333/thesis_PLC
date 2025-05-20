@@ -12,6 +12,7 @@ async def run_sequence(plc):
         q04 = io_addresses.get("Q04")
         q05 = io_addresses.get("Q05")
         i00 = io_addresses.get("I00")
+        i01 = io_addresses.get("I01")
 
         # Validate required addresses
         if not all([q00, q01, i00]):
@@ -27,7 +28,13 @@ async def run_sequence(plc):
                 break
             await asyncio.sleep(0.1)  # avoid tight loop
 
-        print("Input I00 is active. Running sequence...")
+        print("Input I00 is active. E.Stop engaged")
+
+        while True:
+            input_state = await plc.read_node(i01)
+            if input_state:
+                break
+            await asyncio.sleep(0.1)  # avoid tight loop
 
         # Run output sequence
         await plc.write_node(q01, True)
