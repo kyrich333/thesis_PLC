@@ -4,7 +4,8 @@ from plc.my_nodes import io_addresses
 
 async def run_sequence(plc):
     try:
-        # Get addresses
+        plc.running = True
+
         q00 = io_addresses.get("Q00")
         q01 = io_addresses.get("Q01")
         q02 = io_addresses.get("Q02")
@@ -14,44 +15,44 @@ async def run_sequence(plc):
         i00 = io_addresses.get("I00")
         i01 = io_addresses.get("I01")
 
-        # Validate required addresses
         if not all([q00, q01, i00]):
-            print("Required I/O addresses not found in io_addresses.")
+            print("Required I/O addresses not found.")
             return
 
         print("Waiting for input I00 to become True...")
 
-        # Wait until input I00 becomes True
-        while True:
-            input_state = await plc.read_node(i00)
-            if input_state:
+        while plc.running:
+            if await plc.read_node(i00):
                 break
             await asyncio.sleep(0.1)
 
-        print("Input I00 is active. E.Stop engaged")
+        if not plc.running:
+            print("Sequence A stopped before start.")
+            return
 
-        while True:
-            input_state = await plc.read_node(i01)
-            if input_state:
+        print("I00 active. Waiting for I01...")
+
+        while plc.running:
+            if await plc.read_node(i01):
                 break
             await asyncio.sleep(0.1)
 
-        # Run output sequence
-        await plc.write_node(q01, True)
-        await asyncio.sleep(1)
-        await plc.write_node(q02, True)
-        await asyncio.sleep(1)
-        await plc.write_node(q03, True)
-        await asyncio.sleep(1)
-        await plc.write_node(q04, True)
-        await asyncio.sleep(1)
-        await plc.write_node(q05, True)
-        await plc.write_node(q00, False)
-        await plc.write_node(q01, False)
-        await plc.write_node(q02, False)
-        await plc.write_node(q03, False)
-        await plc.write_node(q04, False)
-        await plc.write_node(q05, False)
+        if not plc.running:
+            print("Sequence A stopped before output phase.")
+            return
+
+        # Output sequence
+        for node in [q01, q02, q03, q04, q05]:
+            if not plc.running:
+                print("Sequence A interrupted during output.")
+                return
+            await plc.write_node(node, True)
+            await asyncio.sleep(1)
+
+        # Reset outputs
+        for node in [q00, q01, q02, q03, q04, q05]:
+            await plc.write_node(node, False)
+
         print("Sequence A finished.")
 
     except Exception as e:
