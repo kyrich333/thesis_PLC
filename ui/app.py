@@ -113,8 +113,23 @@ class PLCApp:
         except Exception as e:
             print(f"Failed to stop sequence: {e}")
 
+    def reset_sequence(self):
+        try:
+            module_path = f"product_sequence.{self.selected_sequence.get()}"
+            if module_path in sys.modules:
+                module = importlib.reload(sys.modules[module_path])
+                asyncio.run_coroutine_threadsafe(
+                    module.reset_sequence(self.plc), self.loop
+                )
+                print(f"Resetting sequence: {self.selected_sequence.get()}")
+            else:
+                print("No sequence is currently loaded.")
+        except Exception as e:
+            print(f"Failed to reset sequence: {e}")
+
 
 # nodes operation :
+
 
     def send_to_client(self, key):
         node_address = self.node_addresses.get(key)
@@ -176,7 +191,6 @@ class PLCApp:
 
 
 # create tabs :
-
 
     def create_tabs(self):
         # Home Tab
@@ -331,6 +345,10 @@ class PLCApp:
         button_stop = Button(frame_lo, padx=30, pady=5, bg="red", text="stop",
                              command=lambda: self.stop_sequence())
         button_stop.grid(row=1, column=2, sticky="nsew", padx=5, pady=5)
+
+        button_reset = Button(frame_lo, padx=30, pady=5, bg="red", text="stop",
+                              command=lambda: self.reset_sequence())
+        button_reset.grid(row=1, column=2, sticky="nsew", padx=5, pady=5)
 
         # Tools Tab
         tab2 = ttk.Frame(self.notebook)
