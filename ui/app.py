@@ -59,37 +59,65 @@ class PLCApp:
         if files:
             self.selected_sequence.set(files[0])
 
-    def run_selected_sequence(self, sequence_name):
-        try:
-            module_path = f"product_sequence.{sequence_name}"
-            if module_path in sys.modules:
-                module = importlib.reload(sys.modules[module_path])
+    import importlib
 
-            else:
-                module = importlib.import_module(module_path)
 
-            asyncio.run_coroutine_threadsafe(
-                module.run_sequence(self.plc), self.loop
-            )
-            print(f"Running sequence: {sequence_name}")
-        except Exception as e:
-            print(f"Failed to run sequence {sequence_name}: {e}")
+def run_selected_sequence(self, sequence_name):
+    try:
+        module_path = f"product_sequence.{sequence_name}"
 
-    def stop_sequence(self):
-        try:
-            module_path = f"product_sequence.{self.selected_sequence.get()}"
-            if module_path in sys.modules:
-                module = importlib.reload(sys.modules[module_path])
-                asyncio.run_coroutine_threadsafe(
-                    module.stop_sequence(self.plc), self.loop
-                )
-                print(f"Stopping sequence: {self.selected_sequence.get()}")
-            else:
-                print("No sequence is currently running.")
-        except Exception as e:
-            print(f"Failed to stop sequence: {e}")
+        # Reload if already imported, else import
+        if module_path in sys.modules:
+            module = importlib.reload(sys.modules[module_path])
+        else:
+            module = importlib.import_module(module_path)
+
+        # Check if the run_sequence coroutine exists
+        run_coro = getattr(module, "run_sequence", None)
+        if not run_coro:
+            print(f"No 'run_sequence' coroutine found in {module_path}")
+            return
+
+        # Submit coroutine to asyncio event loop
+        future = asyncio.run_coroutine_threadsafe(
+            run_coro(self.plc), self.loop)
+        print(f"Running sequence: {sequence_name}")
+
+        # Optional: store the future to possibly cancel it later
+        self.current_sequence_future = future
+
+    except Exception as e:
+        print(f"Failed to run sequence '{sequence_name}': {e}")
+
+
+def stop_sequence(self):
+    try:
+        # Build full module path, e.g., product_sequence.my_sequence
+        module_path = f"product_sequence.{self.selected_sequence.get()}"
+
+        # Ensure the module is imported or reloaded
+        if module_path in sys.modules:
+            module = importlib.reload(sys.modules[module_path])
+        else:
+            print("No sequence module is currently loaded.")
+            return
+
+        # Get coroutine
+        stop_coro = getattr(module, "stop_sequence", None)
+        if not stop_coro:
+            print(f"No 'stop_sequence' coroutine found in {module_path}")
+            return
+
+        # Submit coroutine to event loop
+        asyncio.run_coroutine_threadsafe(stop_coro(self.plc), self.loop)
+        print(f"Stopping sequence: {self.selected_sequence.get()}")
+
+    except Exception as e:
+        print(f"Failed to stop sequence: {e}")
+
 
 # nodes operation :
+
 
     def send_to_client(self, key):
         node_address = self.node_addresses.get(key)
@@ -151,7 +179,6 @@ class PLCApp:
 
 
 # create tabs :
-
 
     def create_tabs(self):
         # Home Tab
