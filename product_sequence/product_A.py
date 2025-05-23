@@ -64,6 +64,7 @@ async def stop_sequence(plc):
 
 async def reset_sequence(plc):
     try:
+        stop_sequence(plc)
         print("Resetting product A sequence...")
 
         # Turn off outputs
