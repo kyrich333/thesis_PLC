@@ -41,7 +41,6 @@ async def run_sequence(plc):
             print("Sequence A stopped before output phase.")
             return
 
-        # Output sequence
         for node in [q01, q02, q03, q04, q05]:
             if not plc.running:
                 print("Sequence A interrupted during output.")
@@ -49,7 +48,6 @@ async def run_sequence(plc):
             await plc.write_node(node, True)
             await asyncio.sleep(1)
 
-        # Reset outputs
         for node in [q00, q01, q02, q03, q04, q05]:
             await plc.write_node(node, False)
 
@@ -62,3 +60,22 @@ async def run_sequence(plc):
 async def stop_sequence(plc):
     plc.running = False
     print("Stopping product A.")
+
+
+async def reset_sequence(plc):
+    try:
+        print("Resetting product A sequence...")
+
+        # Turn off outputs
+        for key in ["Q00", "Q01", "Q02", "Q03", "Q04", "Q05"]:
+            node = io_addresses.get(key)
+            if node:
+                await plc.write_node(node, False)
+
+        # Optionally reset internal state or flags
+        plc.running = False
+
+        print("Reset complete.")
+
+    except Exception as e:
+        print(f"Error in reset_sequence: {e}")
