@@ -346,7 +346,7 @@ class PLCApp:
                              command=lambda: self.stop_sequence())
         button_stop.grid(row=1, column=2, sticky="nsew", padx=5, pady=5)
 
-        button_reset = Button(frame_lo, padx=30, pady=5, bg="red", text="stop",
+        button_reset = Button(frame_lo, padx=30, pady=5, bg="yellow", text="reset",
                               command=lambda: self.reset_sequence())
         button_reset.grid(row=1, column=3, sticky="nsew", padx=5, pady=5)
 
