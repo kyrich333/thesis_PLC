@@ -3,11 +3,11 @@ import threading
 import importlib
 import os
 import sys
-from tkinter import Tk, ttk, Button, Label, Canvas, StringVar
+from tkinter import Tk, ttk, Button, Label, Canvas, StringVar, Radiobutton, Entry
 from plc.my_client import PLCClient
 from plc.my_nodes import io_addresses, io_state
 
-product_sequence_folder = '/home/ky/thesis_PLC/product_sequence'
+product_sequence_folder = '/home/ky/thesis_plc/product_sequence'
 
 
 class AsyncioLoopThread(threading.Thread):
@@ -42,8 +42,10 @@ class PLCApp:
 
         self.create_tabs()
 
+# sequence operation :
+
+    # List all files in the directory
     def list_files_in_directory(self, directory):
-        # List all files in the directory
         return os.listdir(directory)
 
     def update_combobox(self):
@@ -56,6 +58,38 @@ class PLCApp:
         self.sequence_combobox['values'] = files
         if files:
             self.selected_sequence.set(files[0])
+
+    def run_selected_sequence(self, sequence_name):
+        try:
+            module_path = f"product_sequence.{sequence_name}"
+            if module_path in sys.modules:
+                module = importlib.reload(sys.modules[module_path])
+
+            else:
+                module = importlib.import_module(module_path)
+
+            asyncio.run_coroutine_threadsafe(
+                module.run_sequence(self.plc), self.loop
+            )
+            print(f"Running sequence: {sequence_name}")
+        except Exception as e:
+            print(f"Failed to run sequence {sequence_name}: {e}")
+
+    def stop_sequence(self):
+        try:
+            module_path = f"product_sequence.{self.selected_sequence.get()}"
+            if module_path in sys.modules:
+                module = importlib.reload(sys.modules[module_path])
+                asyncio.run_coroutine_threadsafe(
+                    module.stop_sequence(self.plc), self.loop
+                )
+                print(f"Stopping sequence: {self.selected_sequence.get()}")
+            else:
+                print("No sequence is currently running.")
+        except Exception as e:
+            print(f"Failed to stop sequence: {e}")
+
+# nodes operation :
 
     def send_to_client(self, key):
         node_address = self.node_addresses.get(key)
@@ -113,28 +147,21 @@ class PLCApp:
             tasks = [self.update_io_states(key)
                      for key in self.io_states.keys()]
             await asyncio.gather(*tasks)
-            await asyncio.sleep(0.025)  # Adjust the sleep time as needed
+            await asyncio.sleep(0.025)
 
-    def run_selected_sequence(self, sequence_name):
-        try:
-            module_path = f"product_sequence.{sequence_name}"
-            if module_path in sys.modules:
-                module = importlib.reload(sys.modules[module_path])
 
-            else:
-                module = importlib.import_module(module_path)
-
-            asyncio.run_coroutine_threadsafe(
-                module.run_sequence(self.plc), self.loop
-            )
-            print(f"Running sequence: {sequence_name}")
-        except Exception as e:
-            print(f"Failed to run sequence {sequence_name}: {e}")
+# create tabs :
 
     def create_tabs(self):
         # Home Tab
+
+        ######################################################################################
+
+        # left upper frame
+
+        ######################################################################################
         tab1 = ttk.Frame(self.notebook)
-        self.notebook.add(tab1, text="Home")
+        self.notebook.add(tab1, text="Sequence Manager")
         tab1.grid_rowconfigure((0, 1), weight=1)
         tab1.grid_columnconfigure((0), weight=1)
 
@@ -145,33 +172,139 @@ class PLCApp:
 
         frame_up_left = ttk.Frame(frame_up, borderwidth=2, relief="groove")
         frame_up_left.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
-        Label(frame_up_left, text="Sequence : ").grid(padx=10, pady=10)
+        Label(frame_up_left, text="Sequence selection: ").grid(
+            padx=10, pady=10)
 
         self.sequence_combobox = ttk.Combobox(
             frame_up_left, textvariable=self.selected_sequence, state="readonly")
-        self.sequence_combobox.grid(row=0, column=2)
+        self.sequence_combobox.grid(
+            sticky="nsew", row=1, column=0, padx=10, pady=5, rowspan=2)
 
         self.update_combobox()
 
-        button_start = Button(frame_up_left, padx=40, pady=20, bg="grey", text="register",
-                              command=lambda: self.run_selected_sequence(self.selected_sequence.get()))
-        button_start.grid(row=0, column=3, sticky="nsew", padx=5, pady=5)
+        button_register = Button(frame_up_left, padx=30, pady=5, bg="light blue", text="register",
+                                 command=lambda: self.run_selected_sequence(self.selected_sequence.get()))
+        button_register.grid(row=1, column=2, sticky="nsew", padx=5, pady=5)
 
-        refresh_button = Button(frame_up_left, padx=40, pady=20,
-                                bg="grey", text="Refresh", command=self.update_combobox)
-        refresh_button.grid(row=0, column=4, sticky="nsew", padx=5, pady=5)
+        refresh_button = Button(frame_up_left, padx=30, pady=5,
+                                text="Refresh", command=self.update_combobox)
+        refresh_button.grid(row=1, column=1, sticky="nsew", padx=5, pady=5)
+
+        self.mode_var = StringVar()
+
+        def update_mode():
+            mode = self.mode_var.get()
+            if mode == "repeat":
+                entry.config(state="normal")
+            else:
+                entry.config(state="disabled")
+
+        rb1 = Radiobutton(frame_up_left, text="Repeat N times",
+                          variable=self.mode_var, value="repeat", command=update_mode)
+        rb1.grid(row=3, column=1, padx=10, pady=2)
+
+        rb2 = Radiobutton(frame_up_left, text="Loop until cancelled",
+                          variable=self.mode_var, value="loop", command=update_mode)
+        rb2.grid(row=3, column=0, padx=10, pady=2)
+
+        entry = Entry(frame_up_left, state="normal")
+        entry.insert(0, "1")
+        entry.config(state="disabled")
+        entry.grid(row=3, column=2, padx=10, pady=2)
+
+        ######################################################################################
+
+        # right upper frame
+
+        ######################################################################################
 
         frame_up_right = ttk.Frame(frame_up, borderwidth=2, relief="groove")
         frame_up_right.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)
-        Label(frame_up_right, text="Queue : ").grid(padx=10, pady=10)
+        Label(frame_up_right, text="Queue : ").grid(
+            sticky="w", row=0, column=0, padx=10, pady=10)
+        frame_up_right.grid_columnconfigure((0), weight=1)
+
+        # Queue_radio = Radiobutton(
+        #     frame_up_right, text="Activate Queue Operation mode", variable=self.selected_operation, value="Queue")
+        # Queue_radio.grid(sticky="w", row=0, column=1, padx=10, pady=10)
+
+        # queue_box = Listbox(frame_up_right, height=20, width=50)
+        # queue_box.grid(sticky="nsew", row=1, column=0,
+        #                padx=10, pady=10, columnspan=4)
+
+        # listbox_control_frame = ttk.Frame(
+        #     frame_up_right, borderwidth=2, relief="groove")
+        # listbox_control_frame.grid(
+        #     row=2, column=0, sticky="nsew", columnspan=4, padx=10, pady=10)
+        # listbox_control_frame.grid_columnconfigure(
+        #     (0, 1, 2, 3), weight=1)
+
+        # start_button = Button(listbox_control_frame,
+        #                       text=" ▶ ", padx=20, pady=20)
+        # start_button.grid(row=0, column=0, sticky="nsew")
+
+        # remove_button = Button(listbox_control_frame,
+        #                        text=" ❌ ", padx=20, pady=20)
+        # remove_button.grid(row=0, column=1, sticky="nsew")
+
+        # up_button = Button(listbox_control_frame,
+        #                    text=" ↑ ", padx=20, pady=20, font=("Arial", 20, "bold"))
+        # up_button.grid(row=0, column=2, sticky="nsew")
+
+        # down_button = Button(listbox_control_frame,
+        #                      text=" ↓ ", padx=20, pady=20, font=("Arial", 20, "bold"))
+        # down_button.grid(row=0, column=3, sticky="nsew")
+
+        # combobox_frame = ttk.Frame(
+        #     frame_up_right, borderwidth=2, relief="groove")
+        # combobox_frame.grid(row=3, column=0, sticky="nsew",
+        #                     padx=10, pady=10, columnspan=4)
+
+        # Label(combobox_frame, text="Select Sequence : ").grid(
+        #     sticky="w", row=0, column=0, padx=10, pady=10)
+        # combobox_frame.grid_columnconfigure(
+        #     (0, 1, 2, 3), weight=1)
+        # combobox_frame.grid_rowconfigure((0, 1, 2, 3, 4), weight=1)
+
+        # self.sequence_combobox = ttk.Combobox(
+        #     combobox_frame, textvariable=self.selected_sequence, state="readonly")
+        # self.sequence_combobox.grid(
+        #     sticky="nsew", row=1, column=0, padx=10, pady=5, rowspan=2)
+
+        # self.update_combobox()
+
+        # refresh_button = Button(combobox_frame, padx=30, pady=5,
+        #                         text="Refresh", command=self.update_combobox)
+        # refresh_button.grid(row=1, column=1, sticky="nsew", padx=5, pady=5)
+
+        # repetition_label = Label(combobox_frame, text="Repetition : ")
+        # repetition_label.grid(row=1, column=2, padx=10, pady=5, sticky="e")
+        # repetition_entry = Entry(combobox_frame, width=10)
+        # repetition_entry.insert(0, "1")
+        # repetition_entry.grid(row=1, column=3, padx=10, pady=5, rowspan=2)
+
+        # button_register = Button(combobox_frame, padx=30, pady=10, bg="light blue", text="register",
+        #                          command=lambda: self.run_selected_sequence(self.selected_sequence.get()))
+        # button_register.grid(row=3, column=3, sticky="nsew", padx=10, pady=40)
+
+        ######################################################################################
+
+        # lower frame
+
+        ######################################################################################
 
         frame_lo = ttk.Frame(tab1, borderwidth=2, relief="groove")
         frame_lo.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
-        Label(frame_lo, text="lower section").grid(padx=10, pady=10)
+
+        label_name = Label(frame_lo, text="Status :")
+        label_name.grid(sticky="w", row=0, column=0, padx=10, pady=10)
+
+        status_label = Label(frame_lo, text="standby")
+        status_label.grid(sticky="w", row=0, column=1, padx=10, pady=10)
 
         # Tools Tab
         tab2 = ttk.Frame(self.notebook)
-        self.notebook.add(tab2, text="Tools")
+        self.notebook.add(tab2, text="I/O Tools")
         tab2.grid_rowconfigure((0, 1, 2, 3), weight=1)
         tab2.grid_columnconfigure((0), weight=1)
 
@@ -433,10 +566,10 @@ class PLCApp:
         }
 
         # sequence edit Tab
-        tab3 = ttk.Frame(self.notebook)
-        self.notebook.add(tab3, text="Sequence Edit")
-        tab3.grid_rowconfigure((0, 1, 2), weight=1)
-        tab3.grid_columnconfigure((0, 1), weight=1)
+        # tab3 = ttk.Frame(self.notebook)
+        # self.notebook.add(tab3, text="Sequence Edit")
+        # tab3.grid_rowconfigure((0, 1, 2), weight=1)
+        # tab3.grid_columnconfigure((0, 1), weight=1)
 
 
 def main():

@@ -26,7 +26,7 @@ async def run_sequence(plc):
             input_state = await plc.read_node(i00)
             if input_state:
                 break
-            await asyncio.sleep(0.1)  # avoid tight loop
+            await asyncio.sleep(0.1)
 
         print("Input I00 is active. E.Stop engaged")
 
@@ -34,7 +34,7 @@ async def run_sequence(plc):
             input_state = await plc.read_node(i01)
             if input_state:
                 break
-            await asyncio.sleep(0.1)  # avoid tight loop
+            await asyncio.sleep(0.1)
 
         # Run output sequence
         await plc.write_node(q01, True)
