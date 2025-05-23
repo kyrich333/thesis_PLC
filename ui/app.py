@@ -152,6 +152,7 @@ class PLCApp:
 
 # create tabs :
 
+
     def create_tabs(self):
         # Home Tab
 
@@ -301,6 +302,10 @@ class PLCApp:
 
         status_label = Label(frame_lo, text="standby")
         status_label.grid(sticky="w", row=0, column=1, padx=10, pady=10)
+
+        button_stop = Button(frame_lo, padx=30, pady=5, bg="light red", text="stop",
+                             command=lambda: self.stop_sequence())
+        button_stop.grid(row=1, column=2, sticky="nsew", padx=5, pady=5)
 
         # Tools Tab
         tab2 = ttk.Frame(self.notebook)
