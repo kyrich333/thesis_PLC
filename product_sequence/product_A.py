@@ -56,3 +56,8 @@ async def run_sequence(plc):
 
     except Exception as e:
         print(f"Error in run_sequence: {e}")
+
+
+async def stop_sequence(plc):
+    plc.running = False
+    print("Stopping product A.")
