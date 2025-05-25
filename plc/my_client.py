@@ -62,9 +62,7 @@ class PLCClient:
             return None
 
     async def toggle_output(self, node_id):
-        # Read the current value of the node
+
         current_value = await self.read_node(node_id)
-        # Toggle the value
         new_value = not current_value
-        # Write the new value to the node
         await self.write_node(node_id, new_value)

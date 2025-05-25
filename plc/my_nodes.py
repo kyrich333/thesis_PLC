@@ -1,5 +1,3 @@
-from asyncua import Client
-import asyncio
 
 url = "opc.tcp://192.168.0.1:4840"
 io_addresses = {

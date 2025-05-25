@@ -7,7 +7,7 @@ from tkinter import Tk, ttk, Button, Label, Canvas, StringVar, Radiobutton, Entr
 from plc.my_client import PLCClient
 from plc.my_nodes import io_addresses, io_state
 
-product_sequence_folder = '/home/ky/thesis_PLC/product_sequence'
+product_sequence_folder = '/home/richky/thesis_app/product_sequence'
 
 
 class AsyncioLoopThread(threading.Thread):
@@ -59,10 +59,15 @@ class PLCApp:
         if files:
             self.selected_sequence.set(files[0])
 
-    import importlib
-
     def run_selected_sequence(self, sequence_name):
         try:
+            # Check if a sequence is already running
+            if hasattr(self, 'current_sequence_future'):
+                if self.current_sequence_future and not self.current_sequence_future.done():
+                    print(
+                        "A sequence is already running. Please wait for it to complete.")
+                    return
+
             module_path = f"product_sequence.{sequence_name}"
 
             # Reload if already imported, else import
@@ -80,10 +85,11 @@ class PLCApp:
             # Submit coroutine to asyncio event loop
             future = asyncio.run_coroutine_threadsafe(
                 run_coro(self.plc), self.loop)
-            print(f"Running sequence: {sequence_name}")
-
-            # Optional: store the future to possibly cancel it later
             self.current_sequence_future = future
+
+            future.add_done_callback(self.clear_current_sequence)
+
+            print(f"Running sequence: {sequence_name}")
 
         except Exception as e:
             print(f"Failed to run sequence '{sequence_name}': {e}")
@@ -126,6 +132,23 @@ class PLCApp:
                 print("No sequence is currently loaded.")
         except Exception as e:
             print(f"Failed to reset sequence: {e}")
+
+    def clear_current_sequence(self, fut):
+        self.current_sequence_future = None
+
+    def cancel_current_sequence(self):
+        if hasattr(self, 'current_sequence_future') and self.current_sequence_future:
+            if not self.current_sequence_future.done():
+                was_cancelled = self.current_sequence_future.cancel()
+                if was_cancelled:
+                    print("Current sequence was successfully cancelled.")
+                else:
+                    print(
+                        "Failed to cancel the current sequence. It may already be running or completed.")
+            else:
+                print("No sequence is currently running.")
+        else:
+            print("No sequence is currently running.")
 
 
 # nodes operation :
