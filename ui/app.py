@@ -7,7 +7,7 @@ from tkinter import Tk, ttk, Button, Label, Canvas, StringVar, Radiobutton, Entr
 from plc.my_client import PLCClient
 from plc.my_nodes import io_addresses, io_state
 
-product_sequence_folder = '/home/richky/thesis_app/product_sequence'
+product_sequence_folder = '/home/ky/thesis_PLC/product_sequence'
 
 
 class AsyncioLoopThread(threading.Thread):
