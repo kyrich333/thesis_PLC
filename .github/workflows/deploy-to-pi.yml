@@ -17,5 +17,4 @@ jobs:
         run: |
           cd /home/ky/thesis_PLC
           git pull
-          # your deploy commands here, for example:
-          # python3 main.py
+          
