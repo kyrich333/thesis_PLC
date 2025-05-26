@@ -49,7 +49,7 @@ async def run_sequence(plc):
                 break
             await asyncio.sleep(0.1)
 
-        for i in range(2):
+        for i in range(1):
             await plc.write_node(q00, True)
             await asyncio.sleep(0.01)
             await plc.write_node(q00, False)
