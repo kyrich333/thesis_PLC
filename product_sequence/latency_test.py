@@ -22,6 +22,7 @@ async def run_sequence(plc):
             if input_state:
                 await plc.write_node(q00, True)
                 print("Input I00 detected. Output Q00 activated.")
+                await plc.write_node(q00, False)
                 break
 
             await asyncio.sleep(0.1)
