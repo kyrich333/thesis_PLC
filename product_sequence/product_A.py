@@ -67,13 +67,11 @@ async def reset_sequence(plc):
         await stop_sequence(plc)
         print("Resetting product A sequence...")
 
-        # Turn off outputs
         for key in ["Q00", "Q01", "Q02", "Q03", "Q04", "Q05"]:
             node = io_addresses.get(key)
             if node:
                 await plc.write_node(node, False)
 
-        # Optionally reset internal state or flags
         plc.running = False
 
         print("Reset complete.")
