@@ -224,7 +224,7 @@ class PLCApp:
 
         ######################################################################################
         tab1 = ttk.Frame(self.notebook)
-        self.notebook.add(tab1, text="Sequence Manager")
+        self.notebook.add(tab1, text="Dynamic Sequence Runner")
         tab1.grid_rowconfigure((0, 1), weight=1)
         tab1.grid_columnconfigure((0), weight=1)
 
