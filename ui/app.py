@@ -359,11 +359,11 @@ class PLCApp:
         frame_lo = ttk.Frame(tab1, borderwidth=2, relief="groove")
         frame_lo.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
 
-        label_name = Label(frame_lo, text="Status :")
-        label_name.grid(sticky="w", row=0, column=0, padx=10, pady=10)
+        # label_name = Label(frame_lo, text="Status :")
+        # label_name.grid(sticky="w", row=0, column=0, padx=10, pady=10)
 
-        status_label = Label(frame_lo, text="standby")
-        status_label.grid(sticky="w", row=0, column=1, padx=10, pady=10)
+        # status_label = Label(frame_lo, text="standby")
+        # status_label.grid(sticky="w", row=0, column=1, padx=10, pady=10)
 
         button_stop = Button(frame_lo, padx=30, pady=5, bg="red", text="stop",
                              command=lambda: self.stop_sequence())
