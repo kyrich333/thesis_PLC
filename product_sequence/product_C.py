@@ -30,7 +30,7 @@ async def run_sequence(plc):
         print("Input I00 is active. Running sequence...")
 
         # Run output sequence
-       
+
         await plc.write_node(q01, True)
         await asyncio.sleep(1)
         await plc.write_node(q02, True)
@@ -44,7 +44,7 @@ async def run_sequence(plc):
         await plc.write_node(q03, False)
         await plc.write_node(q04, False)
 
-        print("Sequence A finished.")
+        print("Sequence C finished.")
 
     except Exception as e:
         print(f"Error in run_sequence: {e}")
