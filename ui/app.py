@@ -262,13 +262,13 @@ class PLCApp:
             else:
                 entry.config(state="disabled")
 
-        rb1 = Radiobutton(frame_up_left, text="Repeat N times",
-                          variable=self.mode_var, value="repeat", command=update_mode)
-        rb1.grid(row=3, column=1, padx=10, pady=2)
+        # rb1 = Radiobutton(frame_up_left, text="Repeat N times",
+        #                   variable=self.mode_var, value="repeat", command=update_mode)
+        # rb1.grid(row=3, column=1, padx=10, pady=2)
 
-        rb2 = Radiobutton(frame_up_left, text="Loop until cancelled",
-                          variable=self.mode_var, value="loop", command=update_mode)
-        rb2.grid(row=3, column=0, padx=10, pady=2)
+        # rb2 = Radiobutton(frame_up_left, text="Loop until cancelled",
+        #                   variable=self.mode_var, value="loop", command=update_mode)
+        # rb2.grid(row=3, column=0, padx=10, pady=2)
 
         entry = Entry(frame_up_left, state="normal")
         entry.insert(0, "1")
