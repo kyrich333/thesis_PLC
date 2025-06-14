@@ -255,12 +255,12 @@ class PLCApp:
 
         self.mode_var = StringVar()
 
-        def update_mode():
-            mode = self.mode_var.get()
-            if mode == "repeat":
-                entry.config(state="normal")
-            else:
-                entry.config(state="disabled")
+        # def update_mode():
+        #     mode = self.mode_var.get()
+        #     if mode == "repeat":
+        #         entry.config(state="normal")
+        #     else:
+        #         entry.config(state="disabled")
 
         # rb1 = Radiobutton(frame_up_left, text="Repeat N times",
         #                   variable=self.mode_var, value="repeat", command=update_mode)
@@ -270,10 +270,10 @@ class PLCApp:
         #                   variable=self.mode_var, value="loop", command=update_mode)
         # rb2.grid(row=3, column=0, padx=10, pady=2)
 
-        entry = Entry(frame_up_left, state="normal")
-        entry.insert(0, "1")
-        entry.config(state="disabled")
-        entry.grid(row=3, column=2, padx=10, pady=2)
+        # entry = Entry(frame_up_left, state="normal")
+        # entry.insert(0, "1")
+        # entry.config(state="disabled")
+        # entry.grid(row=3, column=2, padx=10, pady=2)
 
         ######################################################################################
 
