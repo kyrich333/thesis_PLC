@@ -281,11 +281,11 @@ class PLCApp:
 
         ######################################################################################
 
-        frame_up_right = ttk.Frame(frame_up, borderwidth=2, relief="groove")
-        frame_up_right.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)
-        Label(frame_up_right, text="Queue : ").grid(
-            sticky="w", row=0, column=0, padx=10, pady=10)
-        frame_up_right.grid_columnconfigure((0), weight=1)
+        # frame_up_right = ttk.Frame(frame_up, borderwidth=2, relief="groove")
+        # frame_up_right.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)
+        # Label(frame_up_right, text="Queue : ").grid(
+        #     sticky="w", row=0, column=0, padx=10, pady=10)
+        # frame_up_right.grid_columnconfigure((0), weight=1)
 
         # Queue_radio = Radiobutton(
         #     frame_up_right, text="Activate Queue Operation mode", variable=self.selected_operation, value="Queue")
